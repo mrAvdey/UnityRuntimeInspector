@@ -734,12 +734,28 @@ namespace RuntimeInspectorNamespace
 
         public static IReadOnlyList<Assembly> GetAllAssemblies()
         {
+            return GetAllAssemblies( false );
+        }
+
+        internal static IReadOnlyList<Assembly> GetAllAssemblies( bool fallbackForAddComponent )
+        {
 #if UNITY_6000_4_OR_NEWER
             return UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies();
 #elif UNITY_EDITOR || !NETFX_CORE
             return AppDomain.CurrentDomain.GetAssemblies();
 #else
-            return null;
+            if( !fallbackForAddComponent )
+                return null;
+
+            // Keep the component picker's fallback references local to legacy UWP.
+            return new List<Assembly>( new HashSet<Assembly>
+            {
+                typeof( Transform ).Assembly,
+                typeof( RectTransform ).Assembly,
+                typeof( Rigidbody ).Assembly,
+                typeof( Rigidbody2D ).Assembly,
+                typeof( AudioSource ).Assembly,
+            } );
 #endif
         }
 

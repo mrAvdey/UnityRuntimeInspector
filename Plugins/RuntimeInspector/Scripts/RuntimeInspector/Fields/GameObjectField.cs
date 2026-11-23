@@ -151,15 +151,7 @@ namespace RuntimeInspectorNamespace
 			{
 				List<Type> componentTypes = new List<Type>( 128 );
 
-                IEnumerable<Assembly> assemblies = RuntimeInspectorUtils.GetAllAssemblies() ?? (IEnumerable<Assembly>)new HashSet<Assembly>
-                {
-                    // Common Unity assemblies
-                    typeof(Transform).Assembly,
-                    typeof(RectTransform).Assembly,
-                    typeof(Rigidbody).Assembly,
-                    typeof(Rigidbody2D).Assembly,
-                    typeof(AudioSource).Assembly,
-                };
+				IEnumerable<Assembly> assemblies = RuntimeInspectorUtils.GetAllAssemblies( fallbackForAddComponent: true );
 
 				// Search assemblies for Component types
 				foreach( Assembly assembly in assemblies )
