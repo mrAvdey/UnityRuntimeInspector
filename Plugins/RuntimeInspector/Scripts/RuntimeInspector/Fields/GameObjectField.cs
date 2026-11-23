@@ -151,7 +151,7 @@ namespace RuntimeInspectorNamespace
 			{
 				List<Type> componentTypes = new List<Type>( 128 );
 
-				IEnumerable<Assembly> assemblies = RuntimeInspectorUtils.GetAllAssemblies( fallbackForAddComponent: true );
+				IEnumerable<Assembly> assemblies = GetAddComponentAssemblies();
 
 				// Search assemblies for Component types
 				foreach( Assembly assembly in assemblies )
@@ -203,6 +203,23 @@ namespace RuntimeInspectorNamespace
 				( type ) => ( (Type) type ).FullName,
 				( type ) => ( (Type) type ).FullName,
 				addComponentTypes, null, false, "Add Component", Inspector.Canvas );
+		}
+
+		private static IEnumerable<Assembly> GetAddComponentAssemblies()
+		{
+#if UNITY_6000_4_OR_NEWER || UNITY_EDITOR || !NETFX_CORE
+			return RuntimeInspectorUtils.GetAllAssemblies();
+#else
+			// Legacy UWP cannot enumerate loaded assemblies.
+			return new HashSet<Assembly>
+			{
+				typeof( Transform ).Assembly,
+				typeof( RectTransform ).Assembly,
+				typeof( Rigidbody ).Assembly,
+				typeof( Rigidbody2D ).Assembly,
+				typeof( AudioSource ).Assembly,
+			};
+#endif
 		}
 
 		[UnityEngine.Scripting.Preserve] // This method is bound to removeComponentMethod
