@@ -21,6 +21,7 @@ namespace RuntimeInspectorNamespace
 		private readonly List<bool> componentsExpandedStates = new List<bool>();
 
 		private Type[] addComponentTypes;
+		private IReadOnlyList<Assembly> addComponentFallbackAssemblies;
 
 		internal static ExposedMethod addComponentMethod = new ExposedMethod( typeof( GameObjectField ).GetMethod( "AddComponentButtonClicked", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ), new RuntimeInspectorButtonAttribute( "Add Component", false, ButtonVisibility.InitializedObjects ), false );
 		internal static ExposedMethod removeComponentMethod = new ExposedMethod( typeof( GameObjectField ).GetMethod( "RemoveComponentButtonClicked", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static ), new RuntimeInspectorButtonAttribute( "Remove Component", false, ButtonVisibility.InitializedObjects ), true );
@@ -147,19 +148,17 @@ namespace RuntimeInspectorNamespace
 			if( !target )
 				return;
 
+			// Refresh the fallback picker after a new assembly has been registered.
+			if( addComponentFallbackAssemblies != null && addComponentFallbackAssemblies != RuntimeInspectorUtils.GetRegisteredAssemblies() )
+				addComponentTypes = null;
+
 			if( addComponentTypes == null )
 			{
 				List<Type> componentTypes = new List<Type>( 128 );
 
-                IEnumerable<Assembly> assemblies = RuntimeInspectorUtils.GetAllAssemblies() ?? (IEnumerable<Assembly>)new HashSet<Assembly>
-                {
-                    // Common Unity assemblies
-                    typeof(Transform).Assembly,
-                    typeof(RectTransform).Assembly,
-                    typeof(Rigidbody).Assembly,
-                    typeof(Rigidbody2D).Assembly,
-                    typeof(AudioSource).Assembly,
-                };
+				IReadOnlyList<Assembly> assemblies = RuntimeInspectorUtils.GetAllAssemblies();
+				addComponentFallbackAssemblies = assemblies == null ? RuntimeInspectorUtils.GetRegisteredAssemblies() : null;
+				assemblies = assemblies ?? addComponentFallbackAssemblies;
 
 				// Search assemblies for Component types
 				foreach( Assembly assembly in assemblies )

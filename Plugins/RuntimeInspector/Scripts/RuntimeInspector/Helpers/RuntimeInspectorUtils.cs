@@ -23,6 +23,8 @@ namespace RuntimeInspectorNamespace
 		private static readonly Dictionary<Type, MemberInfo[]> typeToVariables = new Dictionary<Type, MemberInfo[]>( 89 ) { { typeof( object ), null } };
 		private static readonly Dictionary<Type, ExposedMethod[]> typeToExposedMethods = new Dictionary<Type, ExposedMethod[]>( 89 );
 		private static readonly Dictionary<string, Type> typeNameToType = new Dictionary<string, Type>( 89 );
+		private static readonly object registeredAssembliesLock = new object();
+		private static Assembly[] registeredAssemblies = Array.Empty<Assembly>();
 
 		private static readonly HashSet<Type> commonSerializableTypes = new HashSet<Type>()
 		{
@@ -730,6 +732,30 @@ namespace RuntimeInspectorNamespace
 			}
 
 			return result;
+		}
+
+		/// <summary>Registers an assembly for Add Component on platforms without assembly discovery.</summary>
+		public static void RegisterAssembly( Assembly assembly )
+		{
+			if( assembly == null )
+				throw new ArgumentNullException( nameof( assembly ) );
+
+			lock( registeredAssembliesLock )
+			{
+				if( Array.IndexOf( registeredAssemblies, assembly ) >= 0 )
+					return;
+
+				// Resize creates a new snapshot so a picker can finish scanning the old one.
+				int index = registeredAssemblies.Length;
+				Array.Resize( ref registeredAssemblies, index + 1 );
+				registeredAssemblies[index] = assembly;
+			}
+		}
+
+		internal static IReadOnlyList<Assembly> GetRegisteredAssemblies()
+		{
+			lock( registeredAssembliesLock )
+				return registeredAssemblies;
 		}
 
         public static IReadOnlyList<Assembly> GetAllAssemblies()
