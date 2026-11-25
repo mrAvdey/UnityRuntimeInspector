@@ -23,8 +23,7 @@ namespace RuntimeInspectorNamespace
 		private static readonly Dictionary<Type, MemberInfo[]> typeToVariables = new Dictionary<Type, MemberInfo[]>( 89 ) { { typeof( object ), null } };
 		private static readonly Dictionary<Type, ExposedMethod[]> typeToExposedMethods = new Dictionary<Type, ExposedMethod[]>( 89 );
 		private static readonly Dictionary<string, Type> typeNameToType = new Dictionary<string, Type>( 89 );
-		private static readonly object registeredAssembliesLock = new object();
-		private static Assembly[] registeredAssemblies = Array.Empty<Assembly>();
+		private static readonly HashSet<Assembly> registeredAssemblies = new HashSet<Assembly>();
 
 		private static readonly HashSet<Type> commonSerializableTypes = new HashSet<Type>()
 		{
@@ -735,27 +734,18 @@ namespace RuntimeInspectorNamespace
 		}
 
 		/// <summary>Registers an assembly for Add Component on platforms without assembly discovery.</summary>
+		/// <remarks>Register assemblies on the main thread before opening the Add Component picker for the first time.</remarks>
 		public static void RegisterAssembly( Assembly assembly )
 		{
 			if( assembly == null )
 				throw new ArgumentNullException( nameof( assembly ) );
 
-			lock( registeredAssembliesLock )
-			{
-				if( Array.IndexOf( registeredAssemblies, assembly ) >= 0 )
-					return;
-
-				// Resize creates a new snapshot so a picker can finish scanning the old one.
-				int index = registeredAssemblies.Length;
-				Array.Resize( ref registeredAssemblies, index + 1 );
-				registeredAssemblies[index] = assembly;
-			}
+			registeredAssemblies.Add( assembly );
 		}
 
-		internal static IReadOnlyList<Assembly> GetRegisteredAssemblies()
+		internal static IEnumerable<Assembly> GetRegisteredAssemblies()
 		{
-			lock( registeredAssembliesLock )
-				return registeredAssemblies;
+			return registeredAssemblies;
 		}
 
         public static IReadOnlyList<Assembly> GetAllAssemblies()
