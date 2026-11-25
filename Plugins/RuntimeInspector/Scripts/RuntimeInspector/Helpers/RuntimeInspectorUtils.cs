@@ -733,12 +733,14 @@ namespace RuntimeInspectorNamespace
 			return result;
 		}
 
-		// Registers an assembly for Add Component when automatic discovery is unavailable.
-		// Call this on the main thread before opening the picker for the first time.
+		/// <summary>
+		/// Registers an assembly for Add Component when automatic discovery is unavailable.
+		/// Call this on the main thread before opening the picker for the first time.
+		/// </summary>
 		public static void RegisterAssembly( Assembly assembly )
 		{
 			if( assembly == null )
-				throw new ArgumentNullException( nameof( assembly ) );
+				throw new ArgumentNullException( nameof( assembly ), "Cannot register a null assembly for Add Component." );
 
 			registeredAssemblies.Add( assembly );
 		}
