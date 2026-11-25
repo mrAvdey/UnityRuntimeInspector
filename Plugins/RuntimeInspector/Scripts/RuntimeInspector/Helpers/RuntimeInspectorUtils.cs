@@ -733,8 +733,8 @@ namespace RuntimeInspectorNamespace
 			return result;
 		}
 
-		/// <summary>Registers an assembly for Add Component on platforms without assembly discovery.</summary>
-		/// <remarks>Register assemblies on the main thread before opening the Add Component picker for the first time.</remarks>
+		// Registers an assembly for Add Component when automatic discovery is unavailable.
+		// Call this on the main thread before opening the picker for the first time.
 		public static void RegisterAssembly( Assembly assembly )
 		{
 			if( assembly == null )
