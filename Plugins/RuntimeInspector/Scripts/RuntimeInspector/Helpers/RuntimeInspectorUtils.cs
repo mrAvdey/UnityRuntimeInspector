@@ -23,6 +23,7 @@ namespace RuntimeInspectorNamespace
 		private static readonly Dictionary<Type, MemberInfo[]> typeToVariables = new Dictionary<Type, MemberInfo[]>( 89 ) { { typeof( object ), null } };
 		private static readonly Dictionary<Type, ExposedMethod[]> typeToExposedMethods = new Dictionary<Type, ExposedMethod[]>( 89 );
 		private static readonly Dictionary<string, Type> typeNameToType = new Dictionary<string, Type>( 89 );
+		private static readonly HashSet<Assembly> registeredAssemblies = new HashSet<Assembly>();
 
 		private static readonly HashSet<Type> commonSerializableTypes = new HashSet<Type>()
 		{
@@ -730,6 +731,38 @@ namespace RuntimeInspectorNamespace
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Registers an assembly for Add Component when automatic discovery is unavailable.
+		/// Registered assemblies replace the default fallback list on those targets.
+		/// Call this on the main thread before opening the picker for the first time.
+		/// </summary>
+		public static void RegisterAssembly( Assembly assembly )
+		{
+			if( assembly == null )
+				throw new ArgumentNullException( nameof( assembly ), "Cannot register a null assembly for Add Component." );
+
+			registeredAssemblies.Add( assembly );
+		}
+
+		internal static IEnumerable<Assembly> GetRegisteredAssemblies()
+		{
+#if NETFX_CORE && !UNITY_EDITOR && !UNITY_6000_4_OR_NEWER
+			// Preserve the original fallback list solely for backward compatibility.
+			if( registeredAssemblies.Count == 0 )
+			{
+				return new HashSet<Assembly>
+				{
+					typeof( Transform ).Assembly,
+					typeof( RectTransform ).Assembly,
+					typeof( Rigidbody ).Assembly,
+					typeof( Rigidbody2D ).Assembly,
+					typeof( AudioSource ).Assembly,
+				};
+			}
+#endif
+			return registeredAssemblies;
 		}
 
         public static IReadOnlyList<Assembly> GetAllAssemblies()
