@@ -735,6 +735,7 @@ namespace RuntimeInspectorNamespace
 
 		/// <summary>
 		/// Registers an assembly for Add Component when automatic discovery is unavailable.
+		/// Registered assemblies replace the default fallback list on those targets.
 		/// Call this on the main thread before opening the picker for the first time.
 		/// </summary>
 		public static void RegisterAssembly( Assembly assembly )
@@ -747,6 +748,20 @@ namespace RuntimeInspectorNamespace
 
 		internal static IEnumerable<Assembly> GetRegisteredAssemblies()
 		{
+#if NETFX_CORE && !UNITY_EDITOR && !UNITY_6000_4_OR_NEWER
+			// Preserve the original fallback list solely for backward compatibility.
+			if( registeredAssemblies.Count == 0 )
+			{
+				return new HashSet<Assembly>
+				{
+					typeof( Transform ).Assembly,
+					typeof( RectTransform ).Assembly,
+					typeof( Rigidbody ).Assembly,
+					typeof( Rigidbody2D ).Assembly,
+					typeof( AudioSource ).Assembly,
+				};
+			}
+#endif
 			return registeredAssemblies;
 		}
 
